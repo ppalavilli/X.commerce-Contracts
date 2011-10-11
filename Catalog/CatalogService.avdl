@@ -1,0 +1,203 @@
+@namespace("com.x.cap.catalog.contract")
+
+/**
+ * Protocol for the Catalog Service
+ * ================================
+ */
+protocol CatalogService {
+
+	//-----------------------------------------------------------------------------------------------------
+	// Request & Response: Product Types
+	//
+	// 	- GetProductTypesMessage : Request product types by locale.
+	// 	- ProductTypesMessage : Return a collection of product type records.
+	//-----------------------------------------------------------------------------------------------------
+
+	/*
+	   Get Product Types Message.
+		- Catalog message request for all known product types by locale.
+		- Natural key: locale	      
+	*/
+	@topic("/productType/find") 
+	record GetProductTypesMessage {
+		// The locale is used to request Country/Language specific product types.
+		//    - The locale EN_US will be the default if no locale is supplied in the message.
+		union { null, string } locale;
+	}
+
+	/*
+	   Product Type Information
+		- Structure that contains a sub-set of product type metadata information.
+	*/
+	record ProductType {
+		// Contains the product type ID
+		string productTypeId;
+		// Contains the well know product type name.
+		string productTypeName;
+		// categorization data, e.g., /Cameras & Photo/Flashes & Flash Accessories/Flashes
+		string categorization;
+		// Contains a brief description of the product type.
+		string description;
+	}
+
+	/*
+	   Product Types Message
+		- Catalog message response that contains a collection of product types by locale.
+		- Natural key: locale	      
+	*/
+	@topic("/productType/find/success") 
+	record ProductTypesMessage {
+		// Message creation time stamp.
+		string timeStamp;
+		// The product types collection locale. default to en_US
+		union {null, string} locale;
+		// list of product type records
+		array<ProductType> ProductTypes;
+	}
+
+	/*
+	  Error Message
+	      - Catalog error message for GetProductTypesMessage
+	      - Natural key: locale	      
+	*/
+	@topic("/productType/find/fail") 
+	record GetProductTypesErrorMessage {
+		// time stamp.
+		string timeStamp;
+		// The locale specified in request.
+		union {null, string} locale;
+		// error code
+		int errorCode;
+		// error message
+		string errorMessage;
+	}
+
+	//-----------------------------------------------------------------------------------------------------
+	// Request & Response: Product Type Metadata Message
+	//
+	// 	- GetProductTypeMetadataMessage : Request for metadata for a single product type.
+	// 	- ProductTypeMetadataMessage - Return metadata for a single product type.
+	//-----------------------------------------------------------------------------------------------------
+
+	/*
+	   Get Product Type Metadata Message.
+		- Catalog message request for product type metadata.
+	    - Natural key: combination of productTypeId and locale
+	*/
+	@topic("/productType/attributeMetadata/get") 
+	record GetProductTypeMetadataMessage {
+		// Product type ID.
+		string productTypeId;
+		// optional locale, default to en_US
+		union {null, string} locale;
+	}
+
+	/*
+	   Attribute data type
+		- defines well known data types.
+	*/
+	enum AttributeDataType {
+		NUMERIC,
+		CURRENCY,
+		STRING,
+		BOOLEAN,
+		DATE
+	}
+
+	/*
+	   Pre-Defined Values
+	*/
+	record Token {
+		// Indicates if the attribute is restricted to only use predefined values.
+		boolean restricted;
+		// Collection of pre-defined attribute values.
+		array<string> predefinedValues;
+	}
+
+	/*
+	   Numeric Type Specific Attribute Information
+	*/
+	record NumericTypeDetails {
+		// Validation - Maximum allowed value.
+		union { null, int } maxValueAllowed;
+		// Unit of measure pre-defined values.
+		union { null, Token } unitOfMeasure;
+	}
+
+	/*
+	   String Type Specific Attribute Information
+	*/
+	record StringTypeDetails {
+		// Validation - Contains validation rules.
+		union { null, string } regularExpression;
+		// Description of attribute restrictions.
+		union { null, string } descriptionOfRestriction;
+		// Pre-defined attribute values.
+		union { null, Token } predefinedValues;
+		// Indicates if multiple values are allowed.
+		boolean allowMultiValue;
+	}
+
+	/*
+	   Type Specific Information
+	*/
+	record TypeSpecificDetails {
+		// Contains numeric type attribute information
+		union { null, NumericTypeDetails } numericTypeDetails;
+		// Contains string type attribute information
+		union { null, StringTypeDetails } stringTypeDetails;
+	}
+
+	/*
+	   Attribute Metadata Information
+	*/
+	record AttributeMetadata {
+		// Attribute name.
+		string attributeName;
+		// Well known attribute data type.
+		AttributeDataType attributeDataType;
+		// Indicates if the attribute is required.
+		boolean required;
+		// Attribute type specific information.
+		union { null, TypeSpecificDetails} typeSpecificDetails;
+		// Descriptive comments regarding the attribute.
+		union { null, string } attributeDescription;
+	}
+
+	/*
+	   Product Type Metadata Message
+		- Catalog message response that contains attribute metadata for a product type.
+	    - Natural key: combination of productTypeId and locale
+	*/
+	@topic("/productType/attributeMetadata/get/success") 
+	record ProductTypeMetadataMessage {
+		// Message creation time stamp
+		string timeStamp;
+		// Product type Id
+		string productTypeId;
+		// optional locale, default to en_US
+		union {null, string} locale;
+		// list of attribute metadata
+		array<AttributeMetadata> attributeMetadata;
+	}
+
+	/*
+	   Error Message
+	       - error message for GetProductTypeMetadataMessage
+	       - Natural key: combination of productTypeId and locale
+	*/
+	@topic("/productType/attributeMetadata/get/fail") 
+	record GetProductTypeMetadataErrorMessage {
+	       // time stamp.
+	       string timeStamp;
+	       // productTypeId
+	       string productTypeId;
+	       // optional locale 
+	       union {null, string} locale;
+	       // error code
+	       int errorCode;
+	       // error message
+	       string errorMessage;
+	}
+}
+      

@@ -1,0 +1,238 @@
+@namespace("com.x.service.payments.contract")
+protocol Payments {
+
+  // interaction type - front end
+  enum InteractionType {
+    REDIRECT, // not supported yet
+	REDIRECT_PLUS_EXECUTE,
+	CC_API,
+	CC_DIRECT_POST,  // deprecated
+	CC_DIRECT_POST_CACHED, // deprecated
+	OUT_OF_BAND // not supported yet
+  }
+  
+  // render/information for bid response
+  record RedirectRenderInfo {
+    string redirectUrl;
+    union {null, string} logoURL;
+    union {null, string} name;
+    union {null, string} helpTitle;
+    union {null, string} helpURL;
+  }
+  
+  record CardRenderType {
+  	string name;
+  	union {null, string} logoURL;
+  	union {null, int} minLength;
+  	union {null, int} maxLength;
+  }
+  
+  record CreditCardRenderInfo {
+    string productName;
+    array<CardRenderType> cardRenderType;
+  }
+  
+  enum PaymentType {
+  	GOODS,
+  	SERVICE,
+  	PERSONAL,
+  	CASHADVANCE,
+  	DIGITALGOODS
+  }
+  
+  enum Status {
+  	BID,       // internal status (does not correspond to update message, has own topic)
+  	INITIATED, // internal status
+  	PENDING,   // call to provider in progress
+  	FAILED,    // call to provider results (and below)
+  	AUTHORIZED,
+  	CAPTURED,
+  	REVERSED,
+  	REFUNDED,
+  	VOIDED,
+  	EXPIRED
+  }
+
+  record LineData {
+  	string name;
+  	union {null, string} identifier;
+  	union {null, double} totalPrice;  // price of all items for this line (itemPrice * itemCount).  Not including tax.
+  	union {null, double} itemPrice;
+  	union {null, double} itemCount;
+  	union {null, double} itemTax;  // the total tax for the line data.
+  }
+  
+  record Cart {
+  	union {null, array<LineData>} lineItems;
+  	union {null, double} totalTax;
+  	union {null, double} totalShipping;
+  	union {null, double} totalAmount;  // rename to totalItemsPrice. The sum of the totalPrice from all LineData in this cart.
+  	union {null, double} totalHandling;
+  }
+
+  record Payment {
+  	union {null, string} providerAssignedUniqueId; // initially null until the provider workflow assigns it, step may vary, use clientProvidedUniqueId
+  	double amount;
+  	string currency;  // 3 letter currency code/ISO 4217
+  	PaymentType type;
+    Status status;
+    union {null, string} statusReason; // optional field with additional information regarding status
+    union {null, string} providerSpecificReason;
+    union {null, Cart} cart;
+    // TODO expand
+  }
+
+  record PaymentMethod {
+  	InteractionType interactionType;
+  	string methodName; // unique name for payment method (unique for a provider)
+  	union {RedirectRenderInfo, CreditCardRenderInfo} renderInfo;
+  }
+
+  // Bid
+    
+  record BidMessage {
+    string clientProvidedUniqueId; // transaction id unique for merchant such as shipping cart id
+    Payment payment;
+  }
+
+  record Bids {
+    union {null, array<PaymentMethod>} paymentMethods;
+    string destId;
+  }
+  
+  record BidSuccessMessage {
+    string clientProvidedUniqueId;
+    boolean available;
+    union {null, Bids} bids;
+  }
+  
+  // end Bid
+  // Initiate
+
+  enum TransactionType {
+    AUTHORIZE_ONLY, AUTH_CAPTURE
+  }
+
+  record CreditCard {
+  	string cardNumber;
+    string expYear; // YYYY
+    string expMonth; // MM
+    string cardCode; // 3 or 4 digit
+  }
+  
+  record Customer {
+    union {null, string} firstName;
+    union {null, string} lastName;
+    union {null, string} company;
+    union {null, string} address;
+    union {null, string} city;
+    union {null, string} stateProvince;
+    union {null, string} zipPostal;
+    union {null, string} country;
+    union {null, string} phone;
+    union {null, string} merchantAssignedCustomerId;
+    union {null, string} endCustomerIP;
+  }
+  
+  record ShipTo {
+    union {null, string} firstName;
+    union {null, string} lastName;
+    union {null, string} company;
+    union {null, string} address;
+    union {null, string} city;
+    union {null, string} stateProvince;
+    union {null, string} zipPostal;
+    union {null, string} country;
+  }
+  
+  record RedirectExecuteInitiationData {
+  	string returnSuccessURL;
+  	string returnCancelURL;
+  }
+  
+  record APIInitiationData {
+    TransactionType transactionType;
+    CreditCard creditCard;
+    Customer customer;
+    ShipTo shipTo;
+  }
+  
+  record InitiateMessage {
+  	string clientProvidedUniqueId; // transaction id unique for merchant such as shipping cart id
+  	string destinationId; // XXX should this be here? or passed in header
+  	string selectedMethodName; // comes from paymentMethod.methodName received in response to bid
+  	union {RedirectExecuteInitiationData, APIInitiationData} initiationData;
+  	Payment payment;
+  }
+
+  // initiation result data should contain info to act on interaction type initiated (id is assigned in payment)
+  // should contain any information needed for front end redirect  
+  record RedirectExecuteInitiationResultData {
+  	string redirectURL;
+  }
+
+  // place holder  
+  record APIInitiationResultData {
+  }
+  
+  record InitiateSuccessMessage {
+    string clientProvidedUniqueId;
+    string paymentSessionId;
+    union {RedirectExecuteInitiationResultData, APIInitiationResultData} initiationResultData;
+  }
+  
+  record ExecuteMessage {
+  	string clientProvidedUniqueId; // transaction id unique for merchant such as shipping cart id
+  }
+
+  record UpdateMessage {
+    string clientProvidedUniqueId;
+  	Payment payment;
+  }
+  
+  record Criterion {
+    string field;
+    string operation;
+    string operand1;
+    union {null, string} operand2;
+  }
+  
+  record QueryMessage {
+  	array<Criterion> criteria;
+  	int page;
+  }
+  
+  record QuerySuccessMessage {
+  	array<Payment> payments;
+  	QueryMessage criteria;
+  	int totalPages;
+  }
+  
+  record Error {
+  	int code;
+  	union {null, string} message;
+  	union {null, array<string>} parameters;
+  }
+  
+  error Failure
+  {
+    string destinationId;
+    string clientProvidedUniqueId;
+  	array<Error> errors;
+  }
+  
+  record Configuration {
+  	string guid;
+  	map<string> properties;
+  }
+  
+  record ConfigurationChanged {
+  	string guid;
+  }
+  
+  error ConfigurationFailed {
+    string guid;
+  	Configuration configuration;
+  	array<Error> errors;
+  }
+}

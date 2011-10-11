@@ -1,0 +1,47 @@
+@namespace("com.x.service.marketplace.message.eBay")
+
+
+protocol eBay {
+
+	import idl "generated/import/Marketplace.avdl";
+
+	record VariationSpecific {
+		string name;
+		string value;
+	}
+
+	record VariationSpecificDetail{
+		string productAttrUrl;
+		com.x.service.marketplace.message.CurrencyAmount price;
+		int quantity;
+		string sku;
+		array<VariationSpecific> variationSpecifics;
+	}
+
+	record ListingSpecifics {
+		string listingFormat;
+		string duration;
+        union{null,string} countryCode;
+		union{null,com.x.service.marketplace.message.CurrencyAmount} buyItNowPrice;
+		union{null,com.x.service.marketplace.message.CurrencyAmount} reservePrice;
+		union{null,string} payPalEmailAddress;
+		union{null,int} handlingTime;
+		union{null,boolean} useTaxTable;
+
+		// Product Details (additional field)
+		union{null,string} postalCode;
+		union {string, null} location;
+	
+		// Variations
+		union {array<VariationSpecificDetail>, null} variationSpecificDetails;
+	}
+	
+	record MarketplaceProfileSpecifics {
+		string location;
+		string postalCode;
+		string countryCode;
+		union{null,string} payPalEmailAddress;
+		union{null,int} handlingTime;
+		union{null,boolean} useTaxTable;
+	}	
+}

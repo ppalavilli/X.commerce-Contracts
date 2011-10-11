@@ -1,0 +1,356 @@
+@namespace("com.x.cap.inventory")
+protocol InventoryService {
+
+  error InventoryServiceError {
+    int errorCode;
+    string message;
+  }
+  
+  enum ProductStatus {
+    AVAILABLE, RESERVED, COMMITTED, SHIPPED, UNAVAILABLE
+  }
+  
+  enum ReasonStatus {
+    ACTIVE, INACTIVE
+  }
+  
+  enum LocationStatus {
+    ACTIVE, INACTIVE
+  }
+
+  record SetStockAmountEntry {
+    string sku;
+    float quantity;
+    string reasonID;
+    union{null, string} locationID;
+    ProductStatus status;
+  }
+
+  record SetStockAmountEntryResponse {
+    string sku;
+    float quantity;
+    union{null, string} locationID;
+    ProductStatus status;
+  }
+
+  record SetStockAmountEntryError {
+    string sku;
+    union{null, string} locationID;
+    ProductStatus status; 
+    int errCode;
+    string errMsg;
+  }
+  
+  record FindStockEntryError {
+    string sku;
+    int errCode;
+    string errMsg;
+  }
+  
+  record FindStockLocationEntry {
+    string locationID;
+    float available;
+    float committed;
+    float reserved;
+    float shipped;
+    float unavailable;
+  }
+
+  record FindStockEntryResponse {
+    string sku;
+    float totalCommitted;
+    float totalReserved;
+    float totalShipped;
+    float totalUnavailable;
+    array<FindStockLocationEntry> locationAmounts;
+  }
+  
+  record AdjustStockEntry {
+    string sku;
+    float quantity;
+    string reasonID;
+    string locationID;
+    ProductStatus oldStatus;
+    ProductStatus newStatus;
+    union{null, string} referenceID;
+    union{null, int} changeDuration;
+  }
+  
+    record AdjustStockEntryError {
+    string sku;
+    string locationID;
+    ProductStatus oldStatus;
+    ProductStatus newStatus;
+    int errCode;
+    string errMsg;
+  }
+
+  record AdjustStockEntryResponse {
+    string sku;
+    float quantityAdjusted;
+    union{null, string} locationID;
+    ProductStatus oldStatus;
+    ProductStatus newStatus;
+  }
+  
+  record SetReorderPointEntry {
+    string sku;
+    union{null, float} reorderAmount;
+    string reasonID;
+    union{null, string} locationID;
+  }
+  
+  record SetReorderPointEntryError {
+    string sku;
+    union{null, float} reorderAmount;
+    union{null, string} locationID;
+    int errCode;
+    string errMsg;
+  }
+
+  record SetReorderPointEntryResponse {
+    string sku;
+    union{null, float} reorderAmount;
+    union{null, string} locationID;
+  }
+  
+  record FindLocationEntryResponse {
+    string name;
+    string abbreviation;
+    LocationStatus status;
+    string locationID;
+    boolean isDefault;
+  }
+  
+  record FindReasonEntryResponse {
+    string name;
+    ReasonStatus status;
+    string reasonID;
+  }
+  
+
+  // Set Stock Request, Response and Failure Messages
+  @topic("/ebay/SET_STOCK_AMOUNT")
+  record SetStockAmountRequest {
+    string synKey;
+    array<SetStockAmountEntry> entries;
+  }
+  
+  @topic("/ebay/STOCK_AMOUNT_SET")
+  record SetStockAmountResponse {
+    string synKey;
+    array<SetStockAmountEntryResponse> responses;
+  }
+  
+  @topic("/ebay/STOCK_AMOUNT_SET_ERROR" )
+  error FailedSetStockAmountMessage{
+    string synKey;
+    array<SetStockAmountEntryError> responses;
+  }
+
+  // FindStock Request, Response and Failure Messages
+  @topic("/ebay/FIND_STOCK")
+  record FindStockRequest {
+    string synKey;
+    union{null, array<string>} sku;
+  }
+  
+  @topic("/ebay/STOCK_FOUND")
+  record FindStockResponse {
+    string synKey;
+    array<FindStockEntryResponse> responses;
+  }
+  
+  @topic("/ebay/STOCK_FOUND_ERROR")
+  error FailedFindStockMessage{
+    string synKey;
+    array<FindStockEntryError> responses;
+  }
+
+  // AdjustStock Request, Response and Failure Messages
+  @topic("/ebay/ADJUST_STOCK")
+  record AdjustStockRequest {
+    string synKey;
+    array<AdjustStockEntry> entries;
+  }
+  
+  @topic("/ebay/STOCK_ADJUSTED")
+  record AdjustStockResponse {
+    string synKey;
+    array<AdjustStockEntryResponse> responses;
+  }
+  
+  @topic("/ebay/STOCK_ADJUSTED_ERROR")
+  error FailedAdjustStockMessage{
+    string synKey;
+    array<AdjustStockEntryError> responses;
+  }
+  
+  // SetReorderPoint Request, Response and Failure Messages
+  @topic("/ebay/SET_REORDER_POINT")
+  record SetReorderPointRequest {
+    string synKey;
+    array<SetReorderPointEntry> entries;
+  }
+  
+  @topic("/ebay/REORDER_POINT_SET")
+  record SetReorderPointResponse {
+    string synKey;
+    array<SetReorderPointEntryResponse> responses;
+  }
+  
+  @topic("/ebay/REORDER_POINT_SET_ERROR")
+  error FailedSetReorderPointMessage{
+    string synKey;
+    array<SetReorderPointEntryError> responses;
+  }
+
+  // CreateLocation Request, Response and Failure Messages
+  @topic("/ebay/CREATE_LOCATION")
+  record CreateLocationRequest {
+    string synKey;
+    string name;
+    string abbreviation;
+  }
+  
+  @topic("/ebay/LOCATION_CREATED" )
+  record CreateLocationResponse {
+    string synKey;
+    string name;
+    string abbreviation;
+    LocationStatus status;
+    string locationID;
+  }
+  
+  @topic("/ebay/LOCATION_CREATED_ERROR")
+  error FailedCreateLocationMessage{
+    string synKey;
+    InventoryServiceError response;
+  }
+
+  // Update Location Request, Response and Failure Messages
+  @topic("/ebay/UPDATE_LOCATION")
+  record UpdateLocationRequest {
+    string synKey;
+    union{null, string} name;
+    union{null, string} abbreviation;
+    union{null, LocationStatus} status;
+    string locationID;
+  }
+  
+  @topic("/ebay/LOCATION_UPDATED")
+  record UpdateLocationResponse {
+    string synKey;
+    union{null, string} name;
+    union{null, string} abbreviation;
+    union{null, LocationStatus} status;
+    string locationID;
+  }
+  
+  @topic("/ebay/LOCATION_UPDATED_ERROR")
+  error FailedUpdateLocationMessage{
+    string synKey;
+    InventoryServiceError response;
+  }
+  
+  
+  // Find Location Request, Response and Failure Messages
+  @topic("/ebay/FIND_LOCATION")
+  record FindLocationRequest {
+    string synKey;
+    union{null, string} locationID;
+  }
+  
+  @topic("/ebay/LOCATION_FOUND")
+  record FindLocationResponse {
+    string synKey;
+     array<FindLocationEntryResponse> responses;
+  }
+  
+  @topic("/ebay/LOCATION_FOUND_ERROR")
+  error FailedFindLocationMessage{
+    string synKey;
+    union{null,InventoryServiceError} response;
+  }
+  
+  
+  // Create Reason Request, Response and Failure Messages
+  @topic("/ebay/CREATE_REASON")
+  record CreateReasonRequest {
+    string synKey;
+    string name;
+  }
+  
+  @topic("/ebay/REASON_CREATED")
+  record CreateReasonResponse {
+    string synKey;
+    string reasonID;
+    string name;
+    ReasonStatus status;
+  }
+  
+  @topic("/ebay/REASON_CREATED_ERROR")
+  error FailedCreateReasonMessage{
+    string synKey;
+    InventoryServiceError response;
+  }
+
+  // Update Reason Request, Response and Failure Messages
+  @topic("/ebay/UPDATE_REASON")
+  record UpdateReasonRequest {
+    string synKey;
+    union{null, string} name;
+    union{null, ReasonStatus} status;
+    string reasonID;
+  }
+  
+  @topic("/ebay/REASON_UPDATED")
+  record UpdateReasonResponse {
+    string synKey;
+    union{null, string} name;
+    union{null, ReasonStatus}  status;
+    string reasonID;
+  }
+  
+  @topic("/ebay/REASON_UPDATED_ERROR")
+  error FailedUpdateReasonMessage{
+    string synKey;
+    InventoryServiceError response;
+  }
+  
+  
+  // Find Reason Request, Response and Failure Messages
+  @topic("/ebay/FIND_REASON")
+  record FindReasonRequest {
+    string synKey;
+    union{null, string} reasonID;
+  }
+  
+  @topic("/ebay/REASON_FOUND")
+  record FindReasonResponse {
+    string synKey;
+     array<FindReasonEntryResponse> responses;
+  }
+  
+  @topic("/ebay/REASON_FOUND_ERROR")
+  error FailedFindReasonMessage{
+    string synKey;
+    InventoryServiceError response;
+  }
+
+  // stock messages
+  SetStockAmountResponse setStockAmount(SetStockAmountRequest request) throws FailedSetStockAmountMessage; 
+  FindStockResponse findStock(FindStockRequest request) throws FailedFindStockMessage;
+  AdjustStockResponse adjustStock(AdjustStockRequest request) throws FailedAdjustStockMessage;
+  SetReorderPointResponse setReorderPoint(SetReorderPointRequest request) throws FailedSetReorderPointMessage;
+  
+  // location crud messages
+  CreateLocationResponse createLocation(CreateLocationRequest request) throws FailedCreateLocationMessage;
+  UpdateLocationResponse updateLocation(UpdateLocationRequest request) throws FailedUpdateLocationMessage;
+  FindLocationResponse findLocation(FindLocationRequest request) throws FailedFindLocationMessage;
+  
+  // reason crud messages
+  CreateReasonResponse createReason(CreateReasonRequest request) throws FailedCreateReasonMessage;
+  UpdateReasonResponse updateReason(UpdateReasonRequest request) throws FailedUpdateReasonMessage;
+  FindReasonResponse findReason(FindReasonRequest request) throws FailedFindReasonMessage;
+ }
