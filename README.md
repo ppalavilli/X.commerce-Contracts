@@ -59,7 +59,7 @@ The Eclipse plug-in in the [X.commerce Developer Package](https://www.x.com/fabr
 
 We've made a couple of tweaks to both the PHP and Ruby Avro implementations to make them easier to use for our purposes.  Specifically, we use the format typically used for data file storage for encoding messages, which required us to add a way to "force" writing complete schemas into messages.  Both the PHP and Avro versions are in this repository, until we get appropriate patches accepted into the official open source releases.
 
-Here's an example of this in action for both PHP and Ruby.
+Here's an example of this in action for both PHP and Ruby, referencing [Inventory.avdl](https://github.com/xcommerce/innovate-developer-demo/blob/master/Inventory.avdl) from the Innovate developer tutorial.
 
 PHP:
 
@@ -67,7 +67,7 @@ PHP:
 
     include_once 'avro.php';
 
-    $schema = file_get_contents($argv[1]);    // read an avpr; use inventory.avdl
+    $schema = file_get_contents($argv[1]);    // read an avpr; use Inventory.avdl
 
     $p = AvroProtocol::parse($schema);        // parse it
 
@@ -96,7 +96,7 @@ Ruby:
     require 'rubygems'
     require 'avro'
 
-    protocol_text = File.open(ARGV[0], "rb").read    # read an avpr; use inventory.avdl
+    protocol_text = File.open(ARGV[0], "rb").read    # read an avpr; use Inventory.avdl
 
     protocol = Avro::Protocol.parse(protocol_text)   # parse it
 
