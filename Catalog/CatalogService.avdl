@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2011 X.commerce
+ *
+ * By downloading this file from this repository, you are agreeing to the terms and conditions of the
+ * license that govern the X.commerce Contrarcts.  The license is available at
+ * https://www.x.com/developers/xcommerce/products/developer-package/license.
+ */
+
 @namespace("com.x.cap.catalog.contract")
 
 /**

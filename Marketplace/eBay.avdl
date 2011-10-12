@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2011 X.commerce
+ *
+ * By downloading this file from this repository, you are agreeing to the terms and conditions of the
+ * license that govern the X.commerce Contrarcts.  The license is available at
+ * https://www.x.com/developers/xcommerce/products/developer-package/license.
+ */
+
 @namespace("com.x.service.marketplace.message.eBay")
 
 
@@ -21,7 +29,7 @@ protocol eBay {
 	record ListingSpecifics {
 		string listingFormat;
 		string duration;
-        union{null,string} countryCode;
+		union{null,string} countryCode;
 		union{null,com.x.service.marketplace.message.CurrencyAmount} buyItNowPrice;
 		union{null,com.x.service.marketplace.message.CurrencyAmount} reservePrice;
 		union{null,string} payPalEmailAddress;
